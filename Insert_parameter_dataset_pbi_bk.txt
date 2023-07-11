@@ -1,0 +1,53 @@
+
+#Script to change parameters for PowerBI Dataset in Service 
+#brittanyKelley
+#1/24/23
+
+param
+(
+    [string] $datasetID,
+
+    [string] $SchemaName,
+    [string] $NewValue
+    
+)
+
+
+
+
+Connect-PowerBIServiceAccount
+$quit = Read-Host -Prompt "Enter q to Quit "
+while (!($quit -eq "q")) {
+
+
+    $datasetId = Read-Host -Prompt "Enter the dataset id" 
+    $SchemaName = Read-Host -Prompt "Enter Parameter Name"
+    $NewValue = Read-Host -Prompt "Enter Parameter Value"  
+
+    $datasetID
+
+
+
+    $urlUpdateParams = "https://api.powerbi.com/v1.0/myorg/datasets/$datasetId/Default.UpdateParameters"
+
+    $body = "{
+    updateDetails:[
+    {
+        name:'$SchemaName', 
+        newValue:'$NewValue'
+    }
+    ]
+}"
+
+    $content = 'application/json'
+   
+            
+    Invoke-PowerBIRestMethod -Url $urlUpdateParams -Method POST -Body $body -ContentType $content
+    Write-Host "COMPLETE!!!" 
+    #Disconnect-PowerBIServiceAccount
+
+    $quit = Read-Host -Prompt "Enter q to Quit "
+}
+
+
+
