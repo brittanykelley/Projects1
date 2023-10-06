@@ -1,0 +1,400 @@
+#author:bk
+#date 8/10/23
+
+import argparse
+import json
+import os
+import requests
+import shutil
+import msal
+import time
+import pandas as pd
+from azure.identity import DefaultAzureCredential
+from requests.exceptions import RequestException
+import time
+
+def display_prompt(prompt, timeout):
+   print(prompt, end='', flush=True)
+   time.sleep(timeout)
+   print("\r" + " " * len(prompt) + "\r", end='', flush=True)
+prompt_text = "You have just began an automated deployment of a PowerBi template"
+display_prompt(prompt_text, 2)
+
+username = 'XXX'
+password = 'xxx'
+########################################################
+app_id = 'xx'
+tenant_id = 'xx'
+client_id = "xx"
+client_secret = 'xx='
+authority_url = 'xyz' + tenant_id
+scopes = ['xx']
+###############################################################
+def request_access_token(app_id, tenant_id, client_secret, username, password, scopes, authority, client_credential):
+   authority_url = 'https://login.microsoftonline.com/' + tenant_id
+   scopes = ['https://analysis.windows.net/powerbi/api/.default']
+   client = msal.ConfidentialClientApplication(app_id, authority=authority_url, client_credential=client_secret)
+   token_response = client.acquire_token_by_username_password(username=username, password=password, scopes=scopes)
+   if not 'access_token' in token_response:
+      raise Exception(token_response['error_description'])
+   access_id = token_response.get('access_token')
+   print("TOKEN RETRIEVED")
+   return access_id
+
+access_token = request_access_token(app_id, tenant_id, client_secret, username, password, scopes, authority_url, client_secret)
+print(f"Your access token is: {access_token}")  
+headers = {
+      "Authorization": f"Bearer {access_token}",
+      "Content-Type": "application/json"
+}
+# function to get workspace info
+def get_workspace(access_token, your_word, value, DEV_PROD):
+    workspace_ids = []
+    url = "https://api.powerbi.com/v1.0/xyz"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type":  "application/octet-stream",
+        "Accept": "application/pdf",
+    }
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        workspaces = response.json()["value"]
+        for workspace in workspaces:
+            if your_word in workspace['name']: 
+               if workspace['name'].startswith(your_word):
+                   if value in workspace['name']: 
+                      if 'some stuff' not in workspace['name']:
+                           workspace_ids.append([workspace['id'],workspace['name']])
+            else:
+                pass
+    else:
+        print("Failed to retrieve workspaces. Status code:", response.status_code)
+    return workspace_ids
+
+Input1= input("Would you like to deploy X or Y Template?")
+########################
+if Input1 == 'X':
+########################
+   DEV_PROD = input("Would you like to deploy to DEV or PROD? Type DEV or PROD")
+   if DEV_PROD=='DEV':
+      Sup_Dist= input("Supplier or Distributor Template? Type Sup or Dist")
+      if Sup_Dist =="Sup":
+         workspace_i =get_workspace(access_token, Input1, Sup_Dist, DEV_PROD)   
+         workspace_df = pd.DataFrame(workspace_i, columns=('workspace_id', 'workspace_name'))
+         workspace_df['ID'] = range(1, len(workspace_df) + 1)
+         client_sup = [
+            'a',
+            'b',
+            'c',
+            'd',
+            'e',
+            'f',
+            'g',
+            'h',
+            'i',
+         ]
+
+         data =[]
+         data = [{"Client Name": client_sup, "ID": i + 1} for i, client_sup in enumerate(client_sup)]
+         schema_n_df = pd.DataFrame(data)    
+         merged_df = pd.merge(schema_n_df, workspace_df, on="ID")
+         merged_df
+         print(merged_df)
+
+      if Sup_Dist =="Dist":    
+         workspace_i =get_workspace(access_token, Inpput1, Sup_Dist, DEV_PROD)  
+         workspace_df = pd.DataFrame(workspace_i, columns=('workspace_id', 'workspace_name'))
+         workspace_df['ID'] = range(1, len(workspace_df) + 1)
+         client_name = [
+         'xyz'
+         ]
+         data =[]
+         data = [{"Client Name": client_name, "ID": i + 1} for i, client_name in enumerate(client_name)]
+         schema_n_df = pd.DataFrame(data)
+         merged_df = pd.merge(schema_n_df, workspace_df, on="ID")
+         merged_df
+         print(merged_df)
+   
+   if DEV_PROD_=='PROD':
+      workspace_i =get_workspace(access_token, Input1, '-', DEV_PROD)
+      workspace_df = pd.DataFrame(workspace_i, columns=('workspace_id', 'workspace_name'))
+      workspace_df = workspace_df.sort_values(by='workspace_name')
+      workspace_df['ID'] = range(1, len(workspace_df) + 1)
+      client_sup = [
+         'a',
+         'b',
+         'c',
+      ]
+      data =[]
+      data = [{"Client Name": client_sup, "ID": i + 1} for i, client_sup in enumerate(client_sup)]
+      schema_n_df = pd.DataFrame(data)    
+      merged_df = pd.merge(schema_n_df, workspace_df, how="right")
+      merged_d
+      
+            
+##########################
+if Input2== 'Y':
+    DEV_PROD = input("Would you like to deploy to DEV or PROD? Type DEV or PROD")
+#########################    
+    workspace_i =get_workspace(access_token, Input2, "", DEV_PROD)  
+    workspace_df = pd.DataFrame(workspace_i, columns=('workspace_id', 'workspace_name')) 
+    workspace_df = workspace_df.sort_values(by='workspace_name')  
+    workspace_df['ID'] = range(1, len(workspace_df) + 1)
+    client_name= [
+       'a',
+       'b',
+       'c'
+       ]
+        
+    client_name  = sorted(client_name)  
+    data =[]
+    data = [{"Client Name": client_name, "ID": i + 1} for i, client_name in enumerate(client_name)]
+    schema_n_df = pd.DataFrame(data)
+    merged_df = pd.merge(schema_n_df, workspace_df,how="right")
+    merged_df
+source_workspace_id ='xyz'
+
+target_workspace_id = target_workspace_id2['workspace_id'].tolist()
+print("these are targets", target_workspace_id )
+for x, in zip(target_workspace_id):
+   target_workspace_id =x
+
+   if target_workspace_id is not None:   
+      temp_path_root = "your_path_here" 
+      os.makedirs(temp_path_root, exist_ok=True) 
+      def export_report(access_token, report_name, report_id, workspace_id, temp_path): 
+         print(f"== Exporting {report_name} with id: {report_id} to {temp_path}")
+         try:
+               headers = {'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/octet-stream'}  
+               url = f"https://api.powerbi.com/v1.0/myorg/groups/{workspace_id}/reports/{report_id}/Export"
+               response = requests.get(url, headers=headers, stream=True)
+               if response.status_code == 200:
+                  with open(temp_path, 'wb') as f:
+                     for chunk in response.iter_content(chunk_size=8192):
+                           f.write(chunk)
+
+         except Exception as e:
+               print(f"= This report cannot be exported, skipping: {e}")
+      report_name = 'YOUR_NAME'
+      def get_dataset_report(access_token, source_workspace_id): 
+         print("this is source",source_workspace_id)
+         url8 = f"https://api.powerbi.com/v1.0/myorg/groups/{source_workspace_id}/reports" 
+         headers = {
+               'Authorization': f'Bearer {access_token}',
+               'Content-Type': 'multipart/form-data',
+         }
+         response = requests.get(url8, headers=headers)       
+         if response.status_code == 200:
+               report_dataset =[]
+               main_report =[]
+               data_check_report =[]
+               dataset_info = response.json()['value']
+               for item in dataset_info:
+                  id_value = item['id']
+                  if item.get("name", "").upper().startswith("VALUE_ONE"):
+                     report_dataset.append(id_value)
+                     print(report_dataset)
+                  if item.get("name", "").upper().startswith("VALUE_TWO"):
+                     main_report.append(id_value)
+                     print("main report",main_report[0])
+                  if item.get("name", "").upper().startswith("VALUE_THREE"):
+                     data_check_report.append(id_value)
+                  else:
+                     pass
+               return main_report[0], report_dataset.pop(), data_check_report.pop()   
+
+         else:
+               print(f"Failed to retrieve dataset information. Status code: {response.status_code}")
+
+      main_report, report_dataset,data_check_report= get_dataset_report(access_token, source_workspace_id) #call
+      temp_path = os.path.join(temp_path_root, f"{report_name }.pbix")
+      export_report(access_token, report_name, report_dataset, source_workspace_id, temp_path)
+      def import_report(temp_path, target_workspace_id, report_name):
+         report_name = os.path.basename(temp_path).replace('.pbix', '')
+         print(f"== Importing {report_name} to target workspace")
+         headers = {
+               'Authorization': f'Bearer {access_token}',
+               'Content-Type': 'multipart/form-data',
+         }
+         url = f"https://api.powerbi.com/v1.0/myorg/groups/{target_workspace_id}/imports?datasetDisplayName={report_name}"
+         response= requests.post(url, headers=headers, files={'file': open(temp_path, 'rb')})
+         response1 = response.json()
+         return response1  
+
+      def get_dataset(target_workspace_id, access_token):
+         url8 = f"https://api.powerbi.com/v1.0/myorg/groups/{target_workspace_id}/datasets"
+         headers = {
+               'Authorization': f'Bearer {access_token}',
+               'Content-Type': 'multipart/form-data',
+               }
+         response = requests.get(url8, headers=headers)
+         if response.status_code == 200:
+               dataset_info = response.json()['value']
+               dataset =[]
+               for item in dataset_info:
+                  id_value = item['id']
+                  if "YOUR_NAME" in item.get("name", "").upper():
+                     dataset.append(id_value)
+                     print("this is the dataset id, please watch", dataset[0])
+                     return dataset[0]                         
+         call_import =import_report(temp_path, target_workspace_id, report_name)
+      def copy_report(source_workspace_id, target_workspace_id, report_id, access_token):
+      # API endpoints
+         source_report_url = f"https://api.powerbi.com/v1.0/myorg/reports/{report_id}"
+         target_workspace_url = f"https://api.powerbi.com/v1.0/myorg/groups/{target_workspace_id}"
+         create_report_url = f"https://api.powerbi.com/v1.0/myorg/groups/{target_workspace_id}/reports/{report_id}/Clone" 
+         headers = {
+               "Authorization": f"Bearer {access_token}",
+               "Content-Type": "application/json"
+         }
+         try:
+               response = requests.get(source_report_url, headers=headers)
+               response.raise_for_status()
+               source_report = response.json()
+               source_report.pop("id")
+               response = requests.post(create_report_url, headers=headers, json=source_report)
+               response.raise_for_status()
+               target_report = response.json()
+               target_report_id = target_report["id"]
+               print("Report copied successfully.")
+               print("Target Report ID:", target_report_id)
+               return target_report_id
+         except requests.exceptions.HTTPError as e:
+               print("An HTTP error occurred:", e)
+      if call_import is not None: 
+         # print("this is the report id", report_idbk)
+         report_idbk =copy_report(source_workspace_id, target_workspace_id,main_report, access_token)
+         if report_idbk is not None and data_check_report is not None:
+               report_idbk2 =copy_report(source_workspace_id, target_workspace_id, data_check_report, access_token)
+
+      def rebind_report(access_token, target_workspace_id, report_id, new_dataset_id):    
+         url = f'https://api.powerbi.com/v1.0/myorg/groups/{target_workspace_id}/reports/{report_id}/Rebind'
+
+         headers = {
+               "Authorization": f"Bearer {access_token}",
+               "Content-Type": "application/json"
+         }
+         request_data = {
+         'datasetId': new_dataset_id
+         }
+         response = requests.post(url, headers=headers, json=request_data)
+
+         if response.status_code == 200:
+               return print('Report rebind successful!')
+         else:
+               return print('Report rebind failed with status code:', response.status_code)
+
+      new_dataset_id = get_dataset(target_workspace_id, access_token)
+
+      rebind1 =rebind_report(access_token, target_workspace_id, report_idbk, new_dataset_id)
+          
+      rebind_report(access_token, target_workspace_id, report_idbk2, new_dataset_id)
+
+      def change_parameter(access_token, new_dataset_id, schema_name, schema_value):
+         schema_value = str(schema_value)
+         api_url = f"https://api.powerbi.com/v1.0/myorg/datasets/{new_dataset_id}/Default.UpdateParameters"
+
+         headers = {
+         "Authorization": f"Bearer {access_token}",
+         "Content-Type": "application/json",
+         }
+         payload = {
+               "updateDetails": [
+                  {
+                     "name": schema_name,
+                     "newValue": schema_value,
+                  }              
+               ]
+         }
+         response = requests.post(api_url, headers=headers, json=payload)
+         if response.status_code == 200:
+               return print(f"Parameter values, {schema_value} updated successfully.")
+         else:
+               return print(f"Parameter Values didn't update. Status Code: {response.status_code}") 
+
+      schema_name ="SCHEMA_VALUE_HERE"
+
+      if this_value=="xyz":
+            answer = target_workspace_id2[target_workspace_id2['workspace_id']==target_workspace_id]
+            print("this is the workspace id", answer)
+            y= answer['Client Name'].values[0]
+            change_parameter(access_token, new_dataset_id, schema_name, y)
+            refresh_url = f"https://api.powerbi.com/v1.0/myorg/groups/{answer}/datasets/{new_dataset_id}/refreshes"
+            refresh_response = requests.post(refresh_url, headers=headers)     
+
+      def do_we_have_dashboards(workspace_id, access_token):
+         headers2 = {"Authorization": f"Bearer {access_token}"}
+         dashboards_url = f"https://api.powerbi.com/v1.0/myorg/groups/{workspace_id}/dashboards"
+
+         dashboards_response = requests.get(dashboards_url, headers=headers2)
+         if dashboards_response.status_code == 200:
+               dashboards = dashboards_response.json()['value']     
+               return len(dashboards) > 0  
+         else:
+               print(f"Error fetching dashboards: {dashboards_response.status_code} - {dashboards_response.text}")
+               return False
+
+      dashboard_check =do_we_have_dashboards(source_workspace_id, access_token)
+
+      def operation_tile_copy(source_workspace_id, target_workspace_id, access_token, targetreportid, new_dataset_id):
+         headers = {"Authorization": f"Bearer {access_token}"}
+         dashboards_url = f"https://api.powerbi.com/v1.0/myorg/groups/{source_workspace_id}/dashboards"
+         dashboards_response = requests.get(dashboards_url, headers=headers)
+         dashboards = dashboards_response.json()["value"]
+         print(dashboards)
+         for dashboard in dashboards:
+               dashboard_id = dashboard["id"]
+               dashboard_name = dashboard["displayName"]
+               print("the dashboard name is", dashboard_name )
+               print(f"== Cloning dashboard: {dashboard_name}")
+               create_dashboard_url = f"https://api.powerbi.com/v1.0/myorg/groups/{target_workspace_id}/dashboards"
+               create_dashboard_payload = {
+                  "name": dashboard_name
+               }
+               create_dashboard_response = requests.post(create_dashboard_url, json=create_dashboard_payload, headers=headers)
+               target_dashboard_id = create_dashboard_response.json()['id']   
+               tiles_url = f"https://api.powerbi.com/v1.0/myorg/groups/{source_workspace_id}/dashboards/{dashboard_id}/tiles"
+               tiles_response = requests.get(tiles_url, headers=headers)
+               tiles = tiles_response.json()["value"]
+               for tile in tiles:
+                  try:
+                     tile_id = tile["id"]
+                     print("this is tile_id",tile_id)
+                     tile_payload = {
+                           "targetDashboardId": target_dashboard_id,
+                           "tileId": tile_id,
+                           "targetWorkspaceId": target_workspace_id,
+                           "targetReportId": targetreportid,
+                           "targetDatasetId": new_dataset_id
+                     }
+                     copy_tile_url = f"https://api.powerbi.com/v1.0/myorg/groups/{source_workspace_id}/dashboards/{dashboard_id}/tiles/{tile_id}/Clone"
+                     copy_tile_response = requests.post(copy_tile_url, json=tile_payload, headers=headers)
+                     if copy_tile_response.status_code == 201:
+                           print(".", end="", flush=True)
+                           print("Your dashboards have been copied")
+                     else:
+                           print(f"= Error copying tile {tile_id}: {copy_tile_response.text}")
+                  
+                  except RequestException as e:
+                     print("= Error: skipping tile...")
+
+      if dashboard_check == True:
+         print(target_workspace_id, source_workspace_id, main_report, new_dataset_id)
+         operation_tile_copy(source_workspace_id, target_workspace_id, access_token, report_idbk, new_dataset_id)
+      else:
+         print('its false')
+try:
+    os.rmdir(temp_path_root)
+    print("removing what you exported")
+except OSError as e:
+    print(f"Error deleting directory: {e}")             
+print("Deploy is now complete. You may relax")    
+
+
+
+
+   
+   
+
+
+
