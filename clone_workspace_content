@@ -156,7 +156,7 @@ source_workspace_id ='xyz'
 
 target_workspace_id = target_workspace_id2['workspace_id'].tolist()
 print("these are targets", target_workspace_id )
-for x, in zip(target_workspace_id):
+for x in target_workspace_id:
    target_workspace_id =x
 
    if target_workspace_id is not None:   
