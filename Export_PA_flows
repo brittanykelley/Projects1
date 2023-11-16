@@ -1,0 +1,19 @@
+#author:bk 
+
+$environmentId = "Default-071c0cbc-d019-4a7a-8d2f-59b3b8de146a"
+m365 flow environment set --environmentName $environmentId
+$flowsJson = m365 flow list --environmentName $environmentId --asAdmin --output json 
+$flowsJson
+$flows = $flowsJson | ConvertFrom-Json #convert into a custom powershell object
+$exportLocation = [System.Environment]::GetFolderPath("UserProfile")
+$exportLocation = Join-Path -Path $exportLocation -ChildPath "PowerAutomateExport"
+foreach ($flow in $flows) {
+    $flowName = $flow.name
+    $flowDisplayName = $flow.displayName
+    $flowDisplayName
+    $exportPath = Join-Path -Path $exportLocation -ChildPath "$flowDisplayName-$($flow.name)"
+    Write-Output "Exporting Flow: $flowDisplayName"
+    m365 flow export --name $flowName --environmentName $environmentId --path "$exportPath.zip" }
+Write-Output "Flows exported to: $exportLocation"
+
+
