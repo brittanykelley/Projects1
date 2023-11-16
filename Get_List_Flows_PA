@@ -1,0 +1,32 @@
+#purpose: gets list of powerautomate flows in tenant, total count, and saves result to .csv file in user's local drive
+#author: bk 
+
+
+$flows = Get-AdminFlow
+$exportLocation = [System.Environment]::GetFolderPath("UserProfile")
+if ($flows) {
+   
+    $flowList = @()
+      foreach ($flow in $flows) {
+        $flowName = $flow.Name  
+        $displayName = $flow.DisplayName  
+
+          $flowInfo = [PSCustomObject]@{
+            FlowName = $flowName
+            DisplayName = $displayName
+        }
+    
+        $flowList += $flowInfo
+    }
+        
+    $flowCount = $flowList.Count
+
+    Write-Host "Total number of flows: $flowCount"
+    $flowList
+    $csvFilePath = Join-Path -Path $exportLocation -ChildPath "CompleteFlowList.csv"
+    $flowList | Export-Csv -Path $csvFilePath -NoTypeInformation
+    
+    
+} else {
+    Write-Host "No flows found."
+}
