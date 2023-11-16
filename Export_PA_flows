@@ -1,6 +1,6 @@
 #author:bk 
 
-$environmentId = "Default-071c0cbc-d019-4a7a-8d2f-59b3b8de146a"
+$environmentId = "INSERT ENVIROMENT NAME HERE"
 m365 flow environment set --environmentName $environmentId
 $flowsJson = m365 flow list --environmentName $environmentId --asAdmin --output json 
 $flowsJson
